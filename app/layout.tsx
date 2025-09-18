@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import Navigation from '@/components/Navigation';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'PIX Infrações API',
-  description: 'API para recebimento e análise de relatos de infrações PIX',
+  title: 'Sistema de Análise de Relatos PIX',
+  description: 'Sistema para análise de infrações PIX com IA',
 };
 
 export default function RootLayout({
@@ -16,7 +17,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <Navigation />
+        <main className="min-h-screen bg-gray-50">
+          {children}
+        </main>
+      </body>
     </html>
   );
 }
