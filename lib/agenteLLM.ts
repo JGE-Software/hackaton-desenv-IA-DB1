@@ -1,5 +1,6 @@
 import { IRelatoInfracao } from '@/models/RelatoInfracao';
 import AnaliseRelato from '@/models/AnaliseRelato';
+import { PromptLoader } from '@/lib/promptLoader';
 
 export interface ResultadoAnaliseLLM {
   score: number;
@@ -30,7 +31,7 @@ export class AgenteLLM {
   }
 
   public async analisarRelato(relato: IRelatoInfracao): Promise<ResultadoAnaliseLLM> {
-    const prompt = this.gerarPrompt(relato);
+    const prompt = await this.gerarPrompt(relato);
     
     try {
       const response = await this.chamarLLM(prompt);
@@ -55,68 +56,28 @@ export class AgenteLLM {
     }
   }
 
-  private gerarPrompt(relato: IRelatoInfracao): string {
+  private async gerarPrompt(relato: IRelatoInfracao): Promise<string> {
     const dataAbertura = new Date(relato.recebedor.conta.dataAbertura);
     const hoje = new Date();
     const diasDesdeAbertura = Math.floor((hoje.getTime() - dataAbertura.getTime()) / (1000 * 60 * 60 * 24));
     const multiplicador = relato.transacao.valor / relato.metadadosAnalise.valorMedioTransacoesRecebedor;
 
-    return `Você é um agente especializado em análise de fraudes PIX. Analise o seguinte relato de infração e forneça uma pontuação de risco baseada nas regras específicas.
+    // Variáveis para substituição no template
+    const variables = {
+      RELATO_ID: relato._id.toString(),
+      VALOR_TRANSACAO: relato.transacao.valor.toFixed(2),
+      RELATOS_ANTERIORES: relato.metadadosAnalise.relatosAnterioresRecebedor,
+      DIAS_DESDE_ABERTURA: diasDesdeAbertura,
+      SCORE_CONTA: relato.recebedor.conta.scoreRiscoConta,
+      HISTORICO_CONSISTENTE: relato.metadadosAnalise.historicoPagadorConsistente,
+      NOVO_DISPOSITIVO: relato.metadadosAnalise.dispositivoTransacao.novoDispositivo,
+      MULTIPLICADOR: multiplicador.toFixed(1),
+      PERFIL_RISCO: relato.pagador.perfilRisco,
+      DESCRICAO_USUARIO: relato.avaliacaoFraude.descricaoUsuario
+    };
 
-REGRAS DE PONTUAÇÃO:
-1. Histórico do Recebedor:
-   - Se relatosAnterioresRecebedor > 0: +40 pontos
-   - Se relatosAnterioresRecebedor > 3: +60 pontos adicionais
-
-2. Idade da Conta do Recebedor:
-   - Se conta aberta nos últimos 30 dias: +30 pontos
-   - Se conta aberta nos últimos 7 dias: +20 pontos adicionais
-
-3. Consistência da Transação:
-   - Se historicoPagadorConsistente == false: +15 pontos
-   - Se valor for 3x maior que valorMedioTransacoesRecebedor: +25 pontos
-
-4. Contexto do Dispositivo:
-   - Se novoDispositivo == true: +20 pontos
-
-5. Análise de Texto (descricaoUsuario):
-   - Palavras-chave suspeitas: +5 pontos por palavra encontrada
-   - Palavras: "urgente", "seguro", "central", "gerente", "invadida", "ajuda", "proteção", "bloqueio", "emergência", "suspensão", "verificação", "confirmar", "dados", "senha", "token", "código", "autenticação"
-
-6. Score de Risco da Conta:
-   - Se scoreRiscoConta < 300: +20 pontos
-   - Se scoreRiscoConta < 600: +10 pontos
-
-7. Perfil do Pagador:
-   - Se perfilRisco == "ALTO": +15 pontos
-
-CLASSIFICAÇÃO DE RISCO:
-- 0-30 pontos: BAIXO
-- 31-70 pontos: MEDIO  
-- 71-100 pontos: ALTO
-- 101+ pontos: CRITICO
-
-DADOS DO RELATO:
-- ID: ${relato._id}
-- Valor da transação: R$ ${relato.transacao.valor.toFixed(2)}
-- Relatos anteriores do recebedor: ${relato.metadadosAnalise.relatosAnterioresRecebedor}
-- Conta aberta há: ${diasDesdeAbertura} dias
-- Score da conta do recebedor: ${relato.recebedor.conta.scoreRiscoConta}
-- Histórico pagador consistente: ${relato.metadadosAnalise.historicoPagadorConsistente}
-- Novo dispositivo: ${relato.metadadosAnalise.dispositivoTransacao.novoDispositivo}
-- Valor vs média: ${multiplicador.toFixed(1)}x maior
-- Perfil risco pagador: ${relato.pagador.perfilRisco}
-- Descrição do usuário: "${relato.avaliacaoFraude.descricaoUsuario}"
-
-Analise este relato e retorne APENAS um JSON no seguinte formato:
-{
-  "score": <número total de pontos>,
-  "nivelRisco": "<BAIXO|MEDIO|ALTO|CRITICO>",
-  "bandeirasVermelhas": ["<lista de bandeiras identificadas>"],
-  "recomendacoes": ["<lista de recomendações específicas>"],
-  "justificativa": "<explicação detalhada da análise>",
-  "confianca": <número de 0 a 100 representando confiança na análise>
-}`;
+    // Carregar e processar o prompt do arquivo
+    return await PromptLoader.loadAndProcessPrompt('analise-fraude-pix', variables);
   }
 
   private async chamarLLM(prompt: string): Promise<string> {

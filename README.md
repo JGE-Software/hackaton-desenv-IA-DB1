@@ -270,6 +270,20 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 
 **Fallback:** Se nenhuma API key estiver configurada, o sistema usa análise mock para desenvolvimento.
 
+### Gerenciamento de Prompts
+
+O sistema utiliza prompts externos organizados na pasta `prompts/`:
+
+- **`prompts/analise-fraude-pix.txt`**: Template principal para análise de fraudes
+- **`lib/promptLoader.ts`**: Utilitário para carregar e processar templates
+- **Variáveis dinâmicas**: Substituição automática de dados do relato
+
+**Vantagens:**
+- Prompts separados do código
+- Fácil manutenção e edição
+- Reutilização de templates
+- Versionamento independente
+
 ## 🏗️ Estrutura do Projeto
 
 ```
@@ -287,7 +301,10 @@ pix-infracoes-api/
 │   └── page.tsx                  # Página inicial
 ├── lib/
 │   ├── mongodb.ts                # Conexão com MongoDB
-│   └── agenteLLM.ts              # Agente LLM para análise
+│   ├── agenteLLM.ts              # Agente LLM para análise
+│   └── promptLoader.ts           # Carregador de prompts
+├── prompts/
+│   └── analise-fraude-pix.txt    # Template de prompt para análise
 ├── models/
 │   ├── RelatoInfracao.ts         # Modelo de dados
 │   └── AnaliseRelato.ts          # Modelo de análises
@@ -312,8 +329,8 @@ curl http://localhost:3000/api/relatos
 # Buscar análise de um relato
 curl http://localhost:3000/api/analise/64f8a1b2c3d4e5f6a7b8c9d0
 
-# Testar remoção do idRelato
-node teste-sem-idrelato.js
+# Testar prompt externo
+node teste-prompt-externo.js
 ```
 
 ## 📊 Monitoramento
