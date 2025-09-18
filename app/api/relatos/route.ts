@@ -10,19 +10,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validação básica dos campos obrigatórios
-    if (!body.idRelato || !body.transacao || !body.pagador || !body.recebedor || !body.avaliacaoFraude) {
+    if (!body.transacao || !body.pagador || !body.recebedor || !body.avaliacaoFraude) {
       return NextResponse.json(
         { error: 'Campos obrigatórios não fornecidos' },
         { status: 400 }
-      );
-    }
-
-    // Verificar se já existe um relato com o mesmo ID
-    const relatoExistente = await RelatoInfracao.findOne({ idRelato: body.idRelato });
-    if (relatoExistente) {
-      return NextResponse.json(
-        { error: 'Relato com este ID já existe' },
-        { status: 409 }
       );
     }
 
@@ -68,7 +59,6 @@ export async function POST(request: NextRequest) {
       { 
         message: 'Relato de infração registrado e analisado com sucesso',
         id: relatoAtualizado?._id,
-        idRelato: relatoAtualizado?.idRelato,
         status: relatoAtualizado?.statusRelato,
         analise: {
           score: resultadoAnalise.score,

@@ -1,0 +1,96 @@
+{
+	"info": {
+		"_postman_id": "afe7160a-6f67-4bc9-bc1d-9c6870cec36f",
+		"name": "Relatos IA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27969679"
+	},
+	"item": [
+		{
+			"name": "Criar Relatos baixo risco",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"dataHoraRelato\": \"2025-09-18T17:35:59Z\",\r\n  \"statusRelato\": \"EM_ANALISE\",\r\n  \"transacao\": {\r\n    \"endToEndId\": \"E18236120202509181730s0f9e8d7c6b5a\",\r\n    \"txid\": \"VENDAONLINE98765\",\r\n    \"valor\": 95.50,\r\n    \"dataHoraTransacao\": \"2025-09-18T11:15:00Z\",\r\n    \"tipoIniciacao\": \"CHAVE_CNPJ\"\r\n  },\r\n  \"pagador\": {\r\n    \"cpf\": \"111.222.333-44\",\r\n    \"nome\": \"João da Silva\",\r\n    \"agencia\": \"0001\",\r\n    \"conta\": \"12345-6\",\r\n    \"instituicao\": \"MeuBanco S.A.\",\r\n    \"perfilRisco\": \"BAIXO\"\r\n  },\r\n  \"recebedor\": {\r\n    \"cpfCnpj\": \"12.345.678/0001-99\",\r\n    \"nome\": \"Loja de Eletrônicos VendeTudo LTDA\",\r\n    \"chavePix\": \"12345678000199\",\r\n    \"instituicao\": \"Banco Digital XYZ\",\r\n    \"conta\": {\r\n      \"agencia\": \"0001\",\r\n      \"numero\": \"98765-4\",\r\n      \"dataAbertura\": \"2021-03-15\",\r\n      \"scoreRiscoConta\": 120\r\n    }\r\n  },\r\n  \"avaliacaoFraude\": {\r\n    \"motivoRelato\": \"DESACORDO_COMERCIAL\",\r\n    \"subtipoGolpe\": \"PRODUTO_NAO_CONFORME\",\r\n    \"descricaoUsuario\": \"Comprei um fone de ouvido no site da loja. O produto que chegou é de uma marca inferior à anunciada e parece ser uma falsificação. Tentei contato para devolução e não me respondem.\",\r\n    \"evidenciasAnexadas\": [\r\n      {\r\n        \"tipo\": \"SCREENSHOT\",\r\n        \"url\": \"/evidencias/anuncio_produto.jpg\"\r\n      },\r\n      {\r\n        \"tipo\": \"FOTO\",\r\n        \"url\": \"/evidencias/foto_produto_recebido.jpg\"\r\n      }\r\n    ]\r\n  },\r\n  \"metadadosAnalise\": {\r\n    \"relatosAnterioresRecebedor\": 0,\r\n    \"valorMedioTransacoesRecebedor\": 110.00,\r\n    \"historicoPagadorConsistente\": true,\r\n    \"dispositivoTransacao\": {\r\n      \"idDispositivo\": \"DEVICE_ID_ABC987\",\r\n      \"localizacaoIp\": \"200.201.202.XX\",\r\n      \"novoDispositivo\": false\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/relatos",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"relatos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Busca Relato",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"idRelato\": \"INF-20250918-a4b1c8e2-f5d3-4a0b-8c7e-1f9b0d6a2c3f\",\r\n    \"dataHoraRelato\": \"2025-09-18T14:30:15Z\",\r\n    \"statusRelato\": \"EM_ANALISE\",\r\n    \"transacao\": {\r\n        \"endToEndId\": \"E18236120202509181425s0a1b2c3d4e\",\r\n        \"txid\": \"PAYLOADQRCODE123456789\",\r\n        \"valor\": 1250.75,\r\n        \"dataHoraTransacao\": \"2025-09-18T14:25:00Z\",\r\n        \"tipoIniciacao\": \"CHAVE_ALEATORIA\"\r\n    },\r\n    \"pagador\": {\r\n        \"cpf\": \"111.222.333-44\",\r\n        \"nome\": \"João da Silva\",\r\n        \"agencia\": \"0001\",\r\n        \"conta\": \"12345-6\",\r\n        \"instituicao\": \"MeuBanco S.A.\",\r\n        \"perfilRisco\": \"BAIXO\"\r\n    },\r\n    \"recebedor\": {\r\n        \"cpfCnpj\": \"999.888.777-66\",\r\n        \"nome\": \"Maria Souza\",\r\n        \"chavePix\": \"a1b2c3d4-e5f6-7890-1234-567890abcdef\",\r\n        \"instituicao\": \"Banco Digital XYZ\",\r\n        \"conta\": {\r\n            \"agencia\": \"0001\",\r\n            \"numero\": \"98765-4\",\r\n            \"dataAbertura\": \"2025-08-20\",\r\n            \"scoreRiscoConta\": 850\r\n        }\r\n    },\r\n    \"avaliacaoFraude\": {\r\n        \"motivoRelato\": \"GOLPE\",\r\n        \"subtipoGolpe\": \"FALSA_CENTRAL_TELEFONICA\",\r\n        \"descricaoUsuario\": \"Recebi uma ligação de alguém se passando pelo banco...\",\r\n        \"evidenciasAnexadas\": [\r\n            {\r\n                \"tipo\": \"SCREENSHOT\",\r\n                \"url\": \"/evidencias/screenshot_conversa_1.jpg\"\r\n            }\r\n        ]\r\n    },\r\n    \"metadadosAnalise\": {\r\n        \"relatosAnterioresRecebedor\": 3,\r\n        \"valorMedioTransacoesRecebedor\": 250.00,\r\n        \"historicoPagadorConsistente\": false,\r\n        \"dispositivoTransacao\": {\r\n            \"idDispositivo\": \"DEVICE_ID_XYZ123\",\r\n            \"localizacaoIp\": \"177.104.1.XX\",\r\n            \"novoDispositivo\": true\r\n        }\r\n    }\r\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/relatos/68cc55b195a3265ae235bd46",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"relatos",
+						"68cc55b195a3265ae235bd46"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Busca análise relato",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"idRelato\": \"INF-20250918-a4b1c8e2-f5d3-4a0b-8c7e-1f9b0d6a2c3f\",\r\n    \"dataHoraRelato\": \"2025-09-18T14:30:15Z\",\r\n    \"statusRelato\": \"EM_ANALISE\",\r\n    \"transacao\": {\r\n        \"endToEndId\": \"E18236120202509181425s0a1b2c3d4e\",\r\n        \"txid\": \"PAYLOADQRCODE123456789\",\r\n        \"valor\": 1250.75,\r\n        \"dataHoraTransacao\": \"2025-09-18T14:25:00Z\",\r\n        \"tipoIniciacao\": \"CHAVE_ALEATORIA\"\r\n    },\r\n    \"pagador\": {\r\n        \"cpf\": \"111.222.333-44\",\r\n        \"nome\": \"João da Silva\",\r\n        \"agencia\": \"0001\",\r\n        \"conta\": \"12345-6\",\r\n        \"instituicao\": \"MeuBanco S.A.\",\r\n        \"perfilRisco\": \"BAIXO\"\r\n    },\r\n    \"recebedor\": {\r\n        \"cpfCnpj\": \"999.888.777-66\",\r\n        \"nome\": \"Maria Souza\",\r\n        \"chavePix\": \"a1b2c3d4-e5f6-7890-1234-567890abcdef\",\r\n        \"instituicao\": \"Banco Digital XYZ\",\r\n        \"conta\": {\r\n            \"agencia\": \"0001\",\r\n            \"numero\": \"98765-4\",\r\n            \"dataAbertura\": \"2025-08-20\",\r\n            \"scoreRiscoConta\": 850\r\n        }\r\n    },\r\n    \"avaliacaoFraude\": {\r\n        \"motivoRelato\": \"GOLPE\",\r\n        \"subtipoGolpe\": \"FALSA_CENTRAL_TELEFONICA\",\r\n        \"descricaoUsuario\": \"Recebi uma ligação de alguém se passando pelo banco...\",\r\n        \"evidenciasAnexadas\": [\r\n            {\r\n                \"tipo\": \"SCREENSHOT\",\r\n                \"url\": \"/evidencias/screenshot_conversa_1.jpg\"\r\n            }\r\n        ]\r\n    },\r\n    \"metadadosAnalise\": {\r\n        \"relatosAnterioresRecebedor\": 3,\r\n        \"valorMedioTransacoesRecebedor\": 250.00,\r\n        \"historicoPagadorConsistente\": false,\r\n        \"dispositivoTransacao\": {\r\n            \"idDispositivo\": \"DEVICE_ID_XYZ123\",\r\n            \"localizacaoIp\": \"177.104.1.XX\",\r\n            \"novoDispositivo\": true\r\n        }\r\n    }\r\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/analise/68cc6c053dd8f78c9d0bce41",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"analise",
+						"68cc6c053dd8f78c9d0bce41"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "",
+			"type": "default"
+		}
+	]
+}

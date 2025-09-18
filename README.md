@@ -98,7 +98,6 @@ Registra um novo relato de infração PIX e executa análise automática com age
 **Payload de exemplo:**
 ```json
 {
-  "idRelato": "INF-20250918-a4b1c8e2-f5d3-4a0b-8c7e-1f9b0d6a2c3f",
   "dataHoraRelato": "2025-09-18T14:30:15Z",
   "statusRelato": "EM_ANALISE",
   "transacao": {
@@ -177,16 +176,38 @@ Atualiza status e score de um relato.
 }
 ```
 
-### POST /api/analise
+### GET /api/analise/[id]
 
-Executa análise de IA em um relato.
+Busca a análise de um relato específico por ID.
 
-**Payload:**
+**Resposta:**
 ```json
 {
-  "idRelato": "INF-20250918-a4b1c8e2-f5d3-4a0b-8c7e-1f9b0d6a2c3f"
+  "relato": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "status": "CRITICO",
+    "dataCriacao": "2025-01-18T...",
+    "dataAtualizacao": "2025-01-18T..."
+  },
+  "analise": {
+    "id": "64f8a1b2c3d4e5f6a7b8c9d1",
+    "score": 245,
+    "nivelRisco": "CRITICO",
+    "bandeirasVermelhas": [...],
+    "recomendacoes": [...],
+    "justificativa": "...",
+    "confianca": 92,
+    "provider": "gemini",
+    "modelo": "gemini-1.5-flash",
+    "dataAnalise": "2025-01-18T...",
+    "dataCriacao": "2025-01-18T..."
+  }
 }
 ```
+
+### DELETE /api/analise/[id]
+
+Remove todas as análises de um relato específico.
 
 ## 🤖 Agente LLM para Análise de IA
 
@@ -268,7 +289,8 @@ pix-infracoes-api/
 │   ├── mongodb.ts                # Conexão com MongoDB
 │   └── agenteLLM.ts              # Agente LLM para análise
 ├── models/
-│   └── RelatoInfracao.ts         # Modelo de dados
+│   ├── RelatoInfracao.ts         # Modelo de dados
+│   └── AnaliseRelato.ts          # Modelo de análises
 ├── docker-compose.yml            # Configuração do MongoDB
 ├── mongo-init.js                 # Script de inicialização
 └── package.json
@@ -287,13 +309,11 @@ curl -X POST http://localhost:3000/api/relatos \
 # Listar relatos
 curl http://localhost:3000/api/relatos
 
-# Executar análise manual
-curl -X POST http://localhost:3000/api/analise \
-  -H "Content-Type: application/json" \
-  -d '{"idRelato": "INF-20250918-a4b1c8e2-f5d3-4a0b-8c7e-1f9b0d6a2c3f"}'
+# Buscar análise de um relato
+curl http://localhost:3000/api/analise/64f8a1b2c3d4e5f6a7b8c9d0
 
-# Testar agente LLM
-node teste-gemini.js
+# Testar remoção do idRelato
+node teste-sem-idrelato.js
 ```
 
 ## 📊 Monitoramento
@@ -301,6 +321,8 @@ node teste-gemini.js
 - **Mongo Express**: Interface web para o banco de dados
 - **Logs da aplicação**: Console do Next.js
 - **Métricas**: Score de análise e status dos relatos
+- **Histórico de análises**: Coleção `analiserelatos` no MongoDB
+- **Auditoria**: Rastreamento de mudanças e providers utilizados
 
 ## 🔒 Segurança
 

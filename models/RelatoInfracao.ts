@@ -58,7 +58,6 @@ export interface IMetadadosAnalise {
 }
 
 export interface IRelatoInfracao extends Document {
-  idRelato: string;
   dataHoraRelato: Date;
   statusRelato: string;
   transacao: ITransacao;
@@ -129,7 +128,6 @@ const MetadadosAnaliseSchema = new Schema<IMetadadosAnalise>({
 });
 
 const RelatoInfracaoSchema = new Schema<IRelatoInfracao>({
-  idRelato: { type: String, required: true, unique: true },
   dataHoraRelato: { type: Date, required: true },
   statusRelato: { type: String, required: true, default: 'EM_ANALISE' },
   transacao: { type: TransacaoSchema, required: true },

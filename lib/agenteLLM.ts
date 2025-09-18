@@ -1,4 +1,5 @@
 import { IRelatoInfracao } from '@/models/RelatoInfracao';
+import AnaliseRelato from '@/models/AnaliseRelato';
 
 export interface ResultadoAnaliseLLM {
   score: number;
@@ -7,6 +8,8 @@ export interface ResultadoAnaliseLLM {
   recomendacoes: string[];
   justificativa: string;
   confianca: number;
+  provider: 'gemini' | 'openai' | 'mock';
+  modelo: string;
 }
 
 export class AgenteLLM {
@@ -31,11 +34,24 @@ export class AgenteLLM {
     
     try {
       const response = await this.chamarLLM(prompt);
-      return this.processarResposta(response);
+      const resultado = this.processarResposta(response);
+      
+      // Adicionar informações do provider
+      resultado.provider = this.apiKey ? this.provider : 'mock';
+      resultado.modelo = this.apiKey ? 
+        (this.provider === 'gemini' ? (process.env.GEMINI_MODEL || 'gemini-1.5-flash') : 'gpt-4') : 
+        'mock';
+      
+      // Salvar análise no banco de dados
+      await this.salvarAnalise(relato, resultado);
+      
+      return resultado;
     } catch (error) {
       console.error('Erro ao chamar LLM:', error);
       // Fallback para análise básica em caso de erro
-      return this.analiseFallback(relato);
+      const resultado = this.analiseFallback(relato);
+      await this.salvarAnalise(relato, resultado);
+      return resultado;
     }
   }
 
@@ -81,7 +97,7 @@ CLASSIFICAÇÃO DE RISCO:
 - 101+ pontos: CRITICO
 
 DADOS DO RELATO:
-- ID: ${relato.idRelato}
+- ID: ${relato._id}
 - Valor da transação: R$ ${relato.transacao.valor.toFixed(2)}
 - Relatos anteriores do recebedor: ${relato.metadadosAnalise.relatosAnterioresRecebedor}
 - Conta aberta há: ${diasDesdeAbertura} dias
@@ -243,6 +259,29 @@ ${prompt}`
     });
   }
 
+  private async salvarAnalise(relato: IRelatoInfracao, resultado: ResultadoAnaliseLLM): Promise<void> {
+    try {
+      const analise = new AnaliseRelato({
+        relatoId: relato._id,
+        score: resultado.score,
+        nivelRisco: resultado.nivelRisco,
+        bandeirasVermelhas: resultado.bandeirasVermelhas,
+        recomendacoes: resultado.recomendacoes,
+        justificativa: resultado.justificativa,
+        confianca: resultado.confianca,
+        provider: resultado.provider,
+        modelo: resultado.modelo,
+        dataAnalise: new Date()
+      });
+
+      await analise.save();
+      console.log(`✅ Análise salva no banco para relato ${relato._id}`);
+    } catch (error) {
+      console.error('Erro ao salvar análise no banco:', error);
+      // Não falha a operação principal se não conseguir salvar a análise
+    }
+  }
+
   private analiseFallback(relato: IRelatoInfracao): ResultadoAnaliseLLM {
     // Análise básica de fallback
     let score = 0;
@@ -268,7 +307,9 @@ ${prompt}`
       bandeirasVermelhas: bandeiras,
       recomendacoes: ['Análise manual necessária'],
       justificativa: 'Análise de fallback devido a erro no LLM',
-      confianca: 50
+      confianca: 50,
+      provider: 'mock',
+      modelo: 'fallback'
     };
   }
 }
