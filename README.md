@@ -84,7 +84,16 @@ Acesse o Mongo Express em `http://localhost:8081` para gerenciar o banco:
 
 ### POST /api/relatos
 
-Registra um novo relato de infração PIX.
+Registra um novo relato de infração PIX e executa análise automática com agente LLM.
+
+**Resposta inclui:**
+- Dados do relato salvo
+- Score de análise (0-100+)
+- Nível de risco (BAIXO/MEDIO/ALTO/CRITICO)
+- Bandeiras vermelhas identificadas
+- Recomendações específicas
+- Justificativa detalhada da análise
+- Nível de confiança do LLM
 
 **Payload de exemplo:**
 ```json
@@ -179,22 +188,66 @@ Executa análise de IA em um relato.
 }
 ```
 
-## 🤖 Sistema de Análise de IA
+## 🤖 Agente LLM para Análise de IA
 
-O sistema analisa os relatos baseado em diversos fatores:
+O sistema utiliza um agente LLM (Large Language Model) que analisa relatos baseado em regras específicas do AGENTS.MD. Suporta tanto **Gemini (Google)** quanto **OpenAI**, gerando um prompt estruturado com todos os dados relevantes.
 
-- **Relatos anteriores do recebedor** (peso alto)
-- **Valor da transação vs valor médio**
-- **Score de risco da conta do recebedor**
-- **Novo dispositivo utilizado**
-- **Histórico inconsistente do pagador**
-- **Perfil de risco do pagador**
+### Regras de Pontuação Implementadas
+
+**Histórico do Recebedor:**
+- Relatos anteriores > 0: +40 pontos
+- Relatos anteriores > 3: +60 pontos adicionais
+
+**Idade da Conta do Recebedor:**
+- Conta aberta nos últimos 30 dias: +30 pontos
+- Conta aberta nos últimos 7 dias: +20 pontos adicionais
+
+**Consistência da Transação:**
+- Histórico pagador inconsistente: +15 pontos
+- Valor 3x maior que média: +25 pontos
+
+**Contexto do Dispositivo:**
+- Novo dispositivo: +20 pontos
+
+**Análise de Texto:**
+- Palavras-chave suspeitas: +5 pontos por palavra encontrada
+- Palavras: "urgente", "seguro", "central", "gerente", "invadida", "ajuda", etc.
+
+**Score de Risco da Conta:**
+- Score < 300: +20 pontos
+- Score < 600: +10 pontos
+
+**Perfil do Pagador:**
+- Perfil alto risco: +15 pontos
 
 ### Classificação de Risco
 
-- **ALTO_RISCO** (score > 70): Bloqueio imediato recomendado
-- **MEDIO_RISCO** (score 40-70): Monitoramento intensivo
-- **BAIXO_RISCO** (score < 40): Observação
+- **BAIXO** (0-30 pontos): Observação
+- **MEDIO** (31-70 pontos): Monitoramento intensivo
+- **ALTO** (71-100 pontos): Bloqueio cautelar recomendado
+- **CRITICO** (101+ pontos): Bloqueio imediato obrigatório
+
+### Configuração do LLM
+
+O sistema suporta tanto **Gemini (Google)** quanto **OpenAI**. Configure as variáveis de ambiente:
+
+#### Opção 1: Gemini (Recomendado)
+```env
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your-gemini-api-key-here
+GEMINI_MODEL=gemini-1.5-flash  # gemini-1.5-flash, gemini-1.5-pro, gemini-1.0-pro
+```
+
+**Obter API Key:** https://makersuite.google.com/app/apikey
+
+#### Opção 2: OpenAI
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_BASE_URL=https://api.openai.com/v1
+```
+
+**Fallback:** Se nenhuma API key estiver configurada, o sistema usa análise mock para desenvolvimento.
 
 ## 🏗️ Estrutura do Projeto
 
@@ -212,7 +265,8 @@ pix-infracoes-api/
 │   ├── layout.tsx
 │   └── page.tsx                  # Página inicial
 ├── lib/
-│   └── mongodb.ts                # Conexão com MongoDB
+│   ├── mongodb.ts                # Conexão com MongoDB
+│   └── agenteLLM.ts              # Agente LLM para análise
 ├── models/
 │   └── RelatoInfracao.ts         # Modelo de dados
 ├── docker-compose.yml            # Configuração do MongoDB
@@ -225,7 +279,7 @@ pix-infracoes-api/
 ### Exemplo com cURL
 
 ```bash
-# Registrar um relato
+# Registrar um relato (análise automática com LLM)
 curl -X POST http://localhost:3000/api/relatos \
   -H "Content-Type: application/json" \
   -d @exemplo-relato.json
@@ -233,10 +287,13 @@ curl -X POST http://localhost:3000/api/relatos \
 # Listar relatos
 curl http://localhost:3000/api/relatos
 
-# Executar análise
+# Executar análise manual
 curl -X POST http://localhost:3000/api/analise \
   -H "Content-Type: application/json" \
   -d '{"idRelato": "INF-20250918-a4b1c8e2-f5d3-4a0b-8c7e-1f9b0d6a2c3f"}'
+
+# Testar agente LLM
+node teste-gemini.js
 ```
 
 ## 📊 Monitoramento

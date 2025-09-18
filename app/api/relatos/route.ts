@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import RelatoInfracao from '@/models/RelatoInfracao';
+import { AgenteLLM } from '@/lib/agenteLLM';
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,12 +45,39 @@ export async function POST(request: NextRequest) {
 
     const relatoSalvo = await novoRelato.save();
 
+    // Executar análise com agente LLM
+    const agenteLLM = new AgenteLLM();
+    const resultadoAnalise = await agenteLLM.analisarRelato(relatoSalvo);
+
+    // Atualizar relato com o score e status baseado na análise
+    const statusAtualizado = resultadoAnalise.nivelRisco === 'CRITICO' ? 'CRITICO' :
+                            resultadoAnalise.nivelRisco === 'ALTO' ? 'ALTO_RISCO' :
+                            resultadoAnalise.nivelRisco === 'MEDIO' ? 'MEDIO_RISCO' : 'BAIXO_RISCO';
+
+    const relatoAtualizado = await RelatoInfracao.findByIdAndUpdate(
+      relatoSalvo._id,
+      {
+        scoreAnalise: resultadoAnalise.score,
+        statusRelato: statusAtualizado,
+        dataAtualizacao: new Date()
+      },
+      { new: true }
+    );
+
     return NextResponse.json(
       { 
-        message: 'Relato de infração registrado com sucesso',
-        id: relatoSalvo._id,
-        idRelato: relatoSalvo.idRelato,
-        status: relatoSalvo.statusRelato
+        message: 'Relato de infração registrado e analisado com sucesso',
+        id: relatoAtualizado?._id,
+        idRelato: relatoAtualizado?.idRelato,
+        status: relatoAtualizado?.statusRelato,
+        analise: {
+          score: resultadoAnalise.score,
+          nivelRisco: resultadoAnalise.nivelRisco,
+          bandeirasVermelhas: resultadoAnalise.bandeirasVermelhas,
+          recomendacoes: resultadoAnalise.recomendacoes,
+          justificativa: resultadoAnalise.justificativa,
+          confianca: resultadoAnalise.confianca
+        }
       },
       { status: 201 }
     );
