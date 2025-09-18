@@ -85,3 +85,45 @@ O registro é feito diretamente no aplicativo do banco do pagador, geralmente na
     }
   }
 }
+
+
+## Informações para criação do agente de análise do relato
+Vamos criar um sistema de pontuação. O agente atribui pontos para cada "bandeira vermelha" (red flag) encontrada no relato.
+
+Exemplos de Regras e Pontuações:
+
+Histórico do Recebedor:
+
+Se metadadosAnalise.relatosAnterioresRecebedor > 0: +40 pontos (este é um forte indicador).
+
+Se metadadosAnalise.relatosAnterioresRecebedor > 3: +60 pontos adicionais.
+
+Idade da Conta do Recebedor:
+
+Se recebedor.conta.dataAbertura for nos últimos 30 dias: +30 pontos.
+
+Se recebedor.conta.dataAbertura for nos últimos 7 dias: +20 pontos adicionais.
+
+Consistência da Transação:
+
+Se metadadosAnalise.historicoPagadorConsistente == false: +15 pontos.
+
+Se transacao.valor for 3x maior que metadadosAnalise.valorMedioTransacoesRecebedor: +25 pontos.
+
+Contexto do Dispositivo:
+
+Se metadadosAnalise.dispositivoTransacao.novoDispositivo == true: +20 pontos.
+
+Palavras-chave na Descrição (Análise de Texto Simples):
+
+Se avaliacaoFraude.descricaoUsuario contiver palavras como "urgente", "seguro", "central", "gerente", "invadida", "ajuda": +5 pontos por palavra-chave encontrada.
+
+Definição dos Níveis de Risco:
+
+0-30 Pontos: Risco Baixo
+
+31-70 Pontos: Risco Médio
+
+71-100 Pontos: Risco Alto
+
+101+ Pontos: Risco Crítico / Fraude Provável
